@@ -69,7 +69,7 @@ class Loops:
         while True:
             # draw menu
             self.drawer.reset_surface()
-            self.drawer.text("R key: Medium, D key: Easy, L key: Hard, U key: Extreme")
+            self.drawer.text("R key: Medium, D key: Easy, L key: Hard, U key: Extreme", True)
             pygame.display.flip()
         
             # Wait and listen for an event
@@ -77,6 +77,32 @@ class Loops:
             
             if result is not None:
                 return DIFFICULTY[INPUT_DIFFICULTY[result]]
+    # end
+    def dead_loop(self, score, max_score):
+        
+        # Clear pygame event queue
+        pygame.event.clear()
+        
+        while True:
+            # draw menu
+            self.drawer.reset_surface()
+            self.drawer.text("Press any arrow key to play again. Press ESC to quit.", True)
+            self.drawer.score(score)
+            
+            if score == max_score:
+                result_remarks = "Max Score! Double Confirm QF205 get A+"
+            else:
+                result_remarks = "Game over! The max score is: {0}".format(max_score)
+            
+            self.drawer.end_remarks(result_remarks)
+
+            pygame.display.flip()
+        
+            # Wait and listen for an event
+            result = self.event_checker(pygame.event.poll())
+            
+            if result is not None:
+                break
             
     # returns final score
     def game_loop(self, fps):
@@ -159,11 +185,9 @@ class Loops:
             # Set game fps
             self.fps_controller.tick(fps)
         
-        return score
+        return score, qb.max_score
         
-    # end
-    def dead_loop(score):
-        print(score)
+    
             
         
 class QuestionBank:
@@ -241,7 +265,7 @@ class Drawer:
         self.GREEN = pygame.Color(0, 255, 0) # Colour of the option "True"
         self.BLUE = pygame.Color(0, 0, 255) # Colour of the python
         self.BLACK = pygame.Color(0, 0, 0) # Colour of texts
-        self.WHITE = pygame.Color(255, 255, 255) # Background colour
+        self.WHITE = pygame.Color(211, 211, 211) # Background colour
         self.gs = game_surface
   
     def border(self):
@@ -271,14 +295,26 @@ class Drawer:
             display_rectangle.midbottom = (x, y)
         
         self.gs.blit(display_surface, display_rectangle)
+    
+    def end_remarks(self, text):
         
+        text_font = "impact"
+        text_font_size = 22
+        text_colour = self.RED
+        
+        display_text_font = pygame.font.SysFont(text_font, text_font_size)
+        display_surface = display_text_font.render(text, True, text_colour)
+        display_rectangle = display_surface.get_rect()
+        display_rectangle.midtop = (250, 100)
+        
+        self.gs.blit(display_surface, display_rectangle)
         
     def snake(self, python):
         for python_block in python:
             pygame.draw.rect(self.gs, self.BLUE, pygame.Rect(python_block[0],python_block[1],10,10))
         
-    def text(self, text):
-        self.draw(text, 250, 600, False, True)
+    def text(self, text, small_text = False):
+        self.draw(text, 250, 600, False, small_text)
     
     def score(self, score):
         self.draw("Score: {0}".format(score), 390, 50, True)
