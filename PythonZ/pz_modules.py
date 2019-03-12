@@ -1,14 +1,17 @@
+# Import statements
 import pandas as pd, time, contextlib, sys, random, os
-# Disable pygame inherent welcome message from importing
+# Disable pygame in-built welcome message after importing
 with contextlib.redirect_stdout(None):
     import pygame
-    
+
 DIFFICULTY = {
     "easy" : 10,
     "medium" : 20,
     "hard" : 35,
     "extreme" : 50
 }
+"""The difficulty of the game is directly related to the number of frame refreshes per second, which affects the speed of the Python character
+"""
 
 INPUT_DIFFICULTY = {
     "right" : "medium",
@@ -16,96 +19,170 @@ INPUT_DIFFICULTY = {
     "left" : "hard",
     "up" : "extreme"
 }
+"""Input control for user to select their desired difficulty
+"""
 
 USER_INPUT = {
     pygame.K_RIGHT : "right",
     pygame.K_LEFT : "left",
     pygame.K_UP : "up",
     pygame.K_DOWN : "down",
-    pygame.K_ESCAPE : "esc"
 }
+"""Mapping to translate user input events (keyboard presses) into directions
+"""
 
+# Classes
 class Loops:
+    """Parent object to call specific game loop logics
+    """
     
     def __init__(self, drawer):
+        """Initializes Loops object
+        
+        Args:
+            Drawer: Drawer object that is responsible for displaying graphics to users
+        """
+        # Drawer: Drawer object that is responsible for updating graphics on user's interface
         self.drawer = drawer
+        
+        # pygame.time.Clock: a Clock object that controls the game's framerate and can track in-game time
         self.fps_controller = pygame.time.Clock()
 
 
     def user_input_checker(self):
-        # Take the first direction in event
+        """ Get's the user's input through processing all pygame.events recorded
+        
+        Returns:
+            str: Returns user's input based on USER_INPUT's values. 
+            None: Returns when no valid user input is found
+        """
+        # Initialize direction variable with default value
         direction = None
         
+        # Iterate through all posted pygame.events
         for event in pygame.event.get():
+            
+            # Get value of user input based on USER_INPUT dictionary
             user_input = self.event_checker(event)
-            # Allows cycle through rest of events in case for "esc" command
-            if direction is None and user_input is not None:
+            
+            # Get the latest user inpur
+            if user_input is not None:
                 direction = user_input
-                
+        
+        # By not returning in the for loop, it allows code to continue even after finding a user input direction in the event of an "esc" command
         return direction
     
     def event_checker(self, event):
+        """ Translates the user's pygame.event into a direction
+        
+        Args:
+            pygame.event: Python object that represents an event such as a key press
+        
+        Returns:
+            str: Returns user's input based on USER_INPUT's values. 
+            None: Returns when the event is not an arrow key press
+        """ 
+        # Quit pygame if pygame.QUIT event is queued
         if event.type == pygame.QUIT:
             pygame.quit()
+            # Raises SystemExit Exception
             sys.exit()
-        # Get user input
+            
+        # Returns user input
         elif event.type == pygame.KEYDOWN:
+            
+            # Post pygame.QUIT event if user presses the "esc" key
             if event.key == pygame.K_ESCAPE:
                 pygame.event.post(pygame.event.Event(pygame.QUIT))
-                return None
+                
+            # Returns str direction if user presses any arrow keys
             elif event.key in USER_INPUT:
                 return USER_INPUT[event.key]
-        else:
-            return None
+        # Return None if event is not an arrow key press
+        return None
 
                 
     def menu_loop(self):
-        """ returns difficulty  
-        """
+        """ Loops continuously until a user presses an arrow key to select difficulty or "esc" to quit game
         
+        Returns:
+            int: Frames Per Second (FPS) that is used to control game's framerate (speed of Python)
+        """
         # Clear pygame event queue
         pygame.event.clear()
         
-        while True:
-            # draw menu
-            self.drawer.reset_surface()
-            self.drawer.text("R key: Medium, D key: Easy, L key: Hard, U key: Extreme", True)
-            pygame.display.flip()
+        # Resets user interface
+        self.drawer.reset_surface()
         
+        # Posts instructional text to pygame
+        self.drawer.text("R key: Medium, D key: Easy, L key: Hard, U key: Extreme", True)
+        
+        # Update any changes in pygame to user's display 
+        pygame.display.flip()
+        
+        # Continuous loop until return statement or pygame.QUIT command
+        while True:
+
             # Wait and listen for an event
             result = self.event_checker(pygame.event.poll())
             
+            # If user has pressed on any of the arrow keys, return FPS
             if result is not None:
                 return DIFFICULTY[INPUT_DIFFICULTY[result]]
-    # end
+            
     def dead_loop(self, score, max_score):
+        """ Loops continuously until a user presses any arrow key to return to menu or "esc" to quit game
         
+        Args:
+            int: Final score of player
+            int: Maximum score of game (number of questions in question bank)
+        """        
         # Clear pygame event queue
         pygame.event.clear()
         
-        while True:
-            # draw menu
-            self.drawer.reset_surface()
-            self.drawer.text("Press any arrow key to play again. Press ESC to quit.", True)
-            self.drawer.score(score)
-            
-            if score == max_score:
-                result_remarks = "Max Score! Double Confirm QF205 get A+"
-            else:
-                result_remarks = "Game over! The max score is: {0}".format(max_score)
-            
-            self.drawer.end_remarks(result_remarks)
-
-            pygame.display.flip()
+        # Resets user interface
+        self.drawer.reset_surface()
         
+        # Posts instructional text to pygame
+        self.drawer.text("Press any arrow key to play again. Press ESC to quit.", True)
+        
+        # Posts user display score to pygame
+        self.drawer.score(score)
+        
+        # Set game remarks to users based on user's performance
+        if score == max_score:
+            result_remarks = "Max Score! Double Confirm QF205 get A+"
+        else:
+            result_remarks = "Game over! The max score is: {0}".format(max_score)
+        # Posts game remarks to users to pygame
+        self.drawer.end_remarks(result_remarks)
+        
+        # Update any changes in pygame to user's display 
+        pygame.display.flip()
+        
+        # Pause momentarily to give user time to react
+        time.sleep(1)
+        
+        # Continuous loop until return statement or pygame.QUIT command
+        while True:
+            
             # Wait and listen for an event
             result = self.event_checker(pygame.event.poll())
             
+            # If user has pressed on any of the arrow keys, break out of loop where the parent loop returns to menu_loop()
             if result is not None:
                 break
             
-    # returns final score
     def game_loop(self, fps):
+        """Main game loop 
+        
+        Args:
+            int: Frames Per Second
+            
+        Returns: 
+            int: Player's final score
+            int: Game's maximum attainable score
+        """
         
         # Clear pygame event queue
         pygame.event.clear()
@@ -124,7 +201,8 @@ class Loops:
         
         # alive boolean
         alive = True
-
+        
+        # Continuous loop until player's python dies
         while alive: 
             
             # Get question and answer values
@@ -132,32 +210,45 @@ class Loops:
             
             # Iterate through pygame events
             movement = self.user_input_checker()
+            
+            # If player has pressed any of the directional arrow keys, check and update Python's movement direction
             if movement is not None:
                 self.python.update_direction(movement)
-            
-            # Update python
+
+            # Update python based on it's movement direction attribute
             new_head_pos = self.python.move()
+
+            # New python head position is None if it is beyond game boundaries or in its body
             if new_head_pos is None:
                 alive = False
-                
+
             # Check if new head position has reached either of the answers
             if new_head_pos in [false_pos, true_pos]:
+
                 # Check if answer is correct
                 if (answer == 1 and new_head_pos == true_pos) or (answer == 0 and new_head_pos == false_pos):
+                    # If correct, add to score
                     score += 1
+
+                    # If player has reached max score, kill the python to end the game
                     if score == qb.max_score:
                         alive = False
+
+                    # Prepares to reset next question and answer for next iteration of the loop
                     else:
                         qb.next_question = True
-                # If wrong answer
+
+                # If wrong answer, kill the Python
                 else:
                     alive = False
-            # If not, remove last block position from python
+                    
+            # If python head not in any of the answers, remove last block position from python
             elif alive:
                 self.python.pop()
               
             # Generate new answer position if user answered correctly
             if qb.next_question:
+                # Get new random positions
                 false_pos, true_pos = qb.generate_new_answer_position(self.python)
                 qb.next_question = False
             
@@ -182,14 +273,12 @@ class Loops:
             # Update new drawings on player's interface
             pygame.display.flip()
         
-            # Set game fps
+            # Set game fps. Number of times the loop runs per second
             self.fps_controller.tick(fps)
         
         return score, qb.max_score
         
-    
-            
-        
+
 class QuestionBank:
                
     def __init__(self):
