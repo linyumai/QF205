@@ -12,11 +12,14 @@ drawer = Drawer(game_surface)
 loops = Loops(drawer)
 
 while True: 
-    # Get game's frame's per second 
+    
     try:
+        # Get game's frame's per second through user's input
         fps = loops.menu_loop()
         final_score, max_score = loops.game_loop(fps)
         loops.dead_loop(final_score, max_score)
+        
+    # Catch user initiated SystemExit exception
     except SystemExit:
         print("User Initiated Exit... \nClosed Pythonz")
         break

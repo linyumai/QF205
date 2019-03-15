@@ -7,22 +7,22 @@ The game was made as a sketch to assist in a report for teaching the basics of t
 
 |              | Button              |
 |--------------|---------------------|
-| Move Left    | <kbd>left</kbd>     |
-| Move right   | <kbd>right</kbd>    |
-| Move up      | <kbd>up</kbd>       |
-| Move down    | <kbd>down</kbd>     |
-| Quit game    | <kbd>Esc</kbd>      |
+| Move Left    | <kbd>←</kbd>        |
+| Move right   | <kbd>→</kbd>        |
+| Move up      | <kbd>↑</kbd>        |
+| Move down    | <kbd>↓</kbd>        |
+| Quit game    | <kbd>esc</kbd>      |
 
 ## Instructions
 
 ### For both 'Windows' and 'MAC OS'
-```bash
+```
 - Extract files anywhere and open the 'cmd' or 'terminal' respectively in the PythonZ folder
 - ~/PythonZ> python main.py
 ```
 
 ## Warning
-The code below is included and is never recommended for future use.
+The code below is included due to simplicity and is never recommended for future use.
 Dependencies should always be managed externally.
 ```python
 try:
