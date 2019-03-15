@@ -1,8 +1,15 @@
 # Import statements
 import pandas as pd, time, contextlib, sys, random, os
-# Disable pygame in-built welcome message after importing
-with contextlib.redirect_stdout(None):
+
+# WARNING: Code below is not recommended as dependencies should be managed externally
+# This is implemented since it is not important for the project
+try:
     import pygame
+except ImportError:
+    print("Missing pygame. Attempting to install...")
+    os.system("python -m pip install pygame")
+import pygame
+
 
 DIFFICULTY = {
     "easy" : 10,
@@ -458,7 +465,11 @@ class Drawer:
         self.gs.blit(display_surface, display_rectangle)
     
     def end_remarks(self, text):
+        """Draws the ending remarks for the user after Python has did
         
+        Args:
+            str: Remarks
+        """
         text_font = "impact"
         text_font_size = 22
         text_colour = self.RED
@@ -471,22 +482,51 @@ class Drawer:
         self.gs.blit(display_surface, display_rectangle)
         
     def snake(self, python):
+        """Draws the python onto the game surface
+        
+        Args:
+            list: Python's body
+        """
         for python_block in python:
             pygame.draw.rect(self.gs, self.BLUE, pygame.Rect(python_block[0],python_block[1],10,10))
         
     def text(self, text, small_text = False):
+        """Draws text onto the game surface
+        
+        Args:
+            str: text
+            boolean: make text smaller
+        """
         self.draw(text, 250, 600, False, small_text)
     
     def score(self, score):
+        """Draws users score onto the game surface
+        
+        Args:
+            int: score
+        """
         self.draw("Score: {0}".format(score), 390, 50, True)
         
     def answers(self, false_pos, true_pos):
+        """Draws game's answer options onto game surface
+        
+        Args:
+            list: false option's position
+            list: true option's position
+        """
         pygame.draw.rect(self.gs, self.RED, pygame.Rect(false_pos[0],false_pos[1],10,10))
         pygame.draw.rect(self.gs, self.GREEN, pygame.Rect(true_pos[0],true_pos[1],10,10))
 
 class Python(list):
+    """ Python object of the game. Each block of the body is represented in a list [x, y].
+    """
     
     def __init__(self,  length = 5):
+        """Initializes Python object
+        
+        Args:
+            int: length of Python body
+        """
         
         # Directions
         self.RIGHT = [10, 0]
@@ -511,6 +551,12 @@ class Python(list):
             self.append([i,250])
 
     def update_direction(self, movement):
+        """Updates the direction of the Python's movement
+        Includes a logic checker since Python should not be able to make a 180 direction change
+        
+        Args:
+            str: direction => "right", "down", "left", "up"
+        """
         change_to = self.movement_to_direction[movement]
         # Validate python is moving in accordance to the game's logic
         if change_to == self.RIGHT and self.current_direction != self.LEFT:
@@ -523,12 +569,27 @@ class Python(list):
             self.current_direction = self.DOWN
     
     def get_head(self):
+        """Returns the first list inside the parent list object of Python
+        
+        Returns: 
+            list: The first block of the Python's body (index = 0)
+        """
         return (self[0])
     
     def move(self):
+        """Moves the Python in the game based on its current direction
+        
+        Returns: 
+            list: The first block of the Python's body, its head (index = 0)
+            None: if Python "ate" itself or is out of bounds
+        """
+        # Get the new head's position
         new_head_pos = [a + b for a, b in zip(self[0], self.current_direction)]
-        # Check if python "ate itself" or is out of bounds
+        
+        # Insert head into the 0 index of the Python's body
         self.insert(0, new_head_pos)
+        
+        # Check if python "ate itself" or is out of bounds
         if new_head_pos in self[1:]:
             return None
         elif new_head_pos[0] >= 500 or new_head_pos[0] <= 0:
@@ -538,9 +599,7 @@ class Python(list):
 
         return new_head_pos
 
-    def update_body(self, new_head_pos):
-        self.insert(0, new_head_pos)
-
+# Let user know that wrong file was processed to start the game
 if __name__ == '__main__':
     print("pz_modules loaded! Please run game.py to start the game...")
 
