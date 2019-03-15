@@ -270,21 +270,31 @@ class Loops:
             # Draw question
             self.drawer.text(question)
             
-            # Update new drawings on player's interface
+            # Update new drawings onto player's interface
             pygame.display.flip()
         
-            # Set game fps. Number of times the loop runs per second
+            # Set game fps: number of times the loop runs per second
             self.fps_controller.tick(fps)
         
         return score, qb.max_score
         
 
 class QuestionBank:
+    """ Object that holds the game's question bank in a pandas DataFrame object
+    """
                
     def __init__(self):
-        # Call parent constructor
+        """Initializes Question bank object and loads data from a specified folder. 
+        Shuffles order of questions to further encapsulate randomness in the game
+        
+        Raises:
+            FileNotFoundError: If code cannot locate data file in specified folder
+            ValueError: If data file is empty or erroneous (contains missing values)
+        """
+        # Try block to catc Exceptions
         try:
-            path = os.getcwd() + "\\assets\\gamedata.xlsx"
+            # Fix the path based on the relative user's directory and fixed folder containing the data file
+            path = os.getcwd() + "/assets/gamedata.xlsx"
 
             # Ensure that filename argument is a string and not empty
             if not isinstance(path, str) or not path:
@@ -300,24 +310,42 @@ class QuestionBank:
             # Shuffle order of questions
             self.dataframe = self.dataframe.sample(frac=1).reset_index(drop=True)
             
-            # Initialize first question's option
+            # Initialize the first user options' positions
             self.false_pos = [350,350]
             self.true_pos = [350,150]
             
-            # Initialize question logic
+            # Initialize game logic for loading next question 
             self.next_question = False
             
-            # Get maximum score
+            # Get game's maximum score
             self.max_score = len(self.dataframe.index)
             
-            # Get first answer and question
+            # Get first answer and question values
             self.answer, self.question = self.get_answer_and_question_values()
-            
             
         except FileNotFoundError:
             raise FileNotFoundError("{0} file not found!".format(path))
     
     def get_answer_and_question_values(self, score=0):
+        """Retrieves the answer and question value from the question bank based on score
+        
+        Args:
+            int: Score
+            
+        Returns: 
+            tuple: (int: answer, str: question)
+            
+        Raises:
+            IndexError: If arg is equal or greater than the max score
+        
+        Example:
+            Given a question bank of 3 questions, the max_score is 3
+            Index | Question | Answer
+              0   |    q1    |   a1
+              1   |    q2    |   a2
+              2   |    q3    |   a3
+            Hence a score of >= 3 would result in an IndexError
+        """
         
         # Ensure that score argument is within the bounds
         if abs(score) >= self.max_score:
@@ -326,29 +354,55 @@ class QuestionBank:
             return self.dataframe.iloc[score]
         
     def get_answer_and_question_position(self):
+        """Returns position of both the False option and True option
+        
+        Returns: 
+            tuple: (list: False's position, list: True's position)
+        """
         return self.false_pos, self.true_pos
-    
-    def check_answer(self, head_pos):
-        # User answered correctly
-        if (self.answer == 1 and head_pos == self.true_pos) or (self.answer == 0 and head_pos == self.false_pos):
-            self.next_question = True
-            return True
-        else:
-            return False
         
     def generate_new_answer_position(self, python):
+        """Generates two new unique coordinates that are outside of the Python's body
+        
+        Args:
+            list: Python's body
+            
+        Returns: 
+            tuple: (list: false answer's position, list: true answer's position)
+            
+        Raises:
+            ValueError: If python is larger than all possible coordinates
+        """
+        # Prevent code from running into an infinite loop if python fills the entire possible coordinate space
+        if len(python) >= 50*50:
+            raise ValueError("Value Error! Python is too large")
+         
+        # Generate random position within the boundaries of the game for the false option
         self.false_pos = [random.randrange(1,50)*10,random.randrange(1,50)*10]
+        
+        # Generate new positions if position is inside of the python
         while self.false_pos in python:
             self.false_pos = [random.randrange(1,50)*10,random.randrange(1,50)*10]
+        
+        # Generate random position within the boundaries of the game for the true option
         self.true_pos = [random.randrange(1,50)*10,random.randrange(1,50)*10]
+        
+        # Generate new position if position is equal to the false option or position is inside of Python
         while self.true_pos == self.false_pos or self.true_pos in python:
             self.true_pos = [random.randrange(1,50)*10,random.randrange(1,50)*10]
+            
         return self.false_pos, self.true_pos
 
 
 class Drawer:    
-    
+    """Drawer class that acts as a wrapper for code to draw shapes/text onto pygame display for user
+    """
     def __init__(self, game_surface):
+        """Initializes Drawer object
+        
+        Args:
+            pygame.Surface: Main game surface that the player sees
+        """
         # Set colours
         self.RED = pygame.Color(255, 0, 0) # Colour of the option "False"
         self.GREEN = pygame.Color(0, 255, 0) # Colour of the option "True"
@@ -358,13 +412,25 @@ class Drawer:
         self.gs = game_surface
   
     def border(self):
+        """Draws the fix bottom border that separates the game area and text area that displays the questions
+        """
         pygame.draw.rect(self.gs, self.BLACK, (0, 510, 500, 10))
         
     def reset_surface(self):
+        """Resets the main game surface by painting over all content on the surface with white
+        """
         self.gs.fill(self.WHITE)
         
     def draw(self, text, x, y, print_score = False, small_text = False):
+        """Draws either the score, question, or instructions based on the arguments
         
+        Args:
+            str: text to be displayed
+            int: horizontal axis coordinates
+            int: vertical axis coordinates
+            boolean: True to print score, False to print text
+            boolean: Print smaller text
+        """
         text_font = "impact" if print_score else "arial"
         text_font_size = 24 if print_score else 20
         if small_text: 
@@ -374,8 +440,13 @@ class Drawer:
         else:
             text_colour = self.BLACK
             
+        # Initialize to-be-displayed text's font and font size
         display_text_font = pygame.font.SysFont(text_font, text_font_size)
+        
+        # Create pygame.Surface object for text to appear on while assigning text colour
         display_surface = display_text_font.render(text, True, text_colour)
+        
+        # Create pygame.Rect object from Surface
         display_rectangle = display_surface.get_rect()
         
         if print_score:
@@ -383,6 +454,7 @@ class Drawer:
         else:
             display_rectangle.midbottom = (x, y)
         
+        # Update new surface and rectangle onto main game surface
         self.gs.blit(display_surface, display_rectangle)
     
     def end_remarks(self, text):
@@ -471,3 +543,8 @@ class Python(list):
 
 if __name__ == '__main__':
     print("pz_modules loaded! Please run game.py to start the game...")
+
+"""Possible enhancements:
+Use @property decorator to further improve code reusability
+Fully implement game variables to be relative to user created setting's for better customizability
+"""
