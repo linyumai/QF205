@@ -592,9 +592,9 @@ class Python(list):
         # Check if python "ate itself" or is out of bounds
         if new_head_pos in self[1:]:
             return None
-        elif new_head_pos[0] >= 500 or new_head_pos[0] <= 0:
+        elif new_head_pos[0] > 490 or new_head_pos[0] < 0:
             return None
-        elif new_head_pos[1] >= 500 or new_head_pos[1] <= 0:
+        elif new_head_pos[1] > 490 or new_head_pos[1] <  0:
             return None
 
         return new_head_pos
