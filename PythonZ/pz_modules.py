@@ -548,7 +548,7 @@ class Python(list):
         # Initialize list
         super().__init__()
         for i in range(100, 10 * (10-length), -10):
-            self.append([i,250])
+            self.append([i,240])
 
     def update_direction(self, movement):
         """Updates the direction of the Python's movement
